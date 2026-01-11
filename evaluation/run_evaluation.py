@@ -192,7 +192,8 @@ class EvaluationRunner:
                     )
                     # Collect validation errors for logging
                     validation_errors = [
-                        r.reason for r in validation_result.validation_results 
+                        r.reason
+                        for r in validation_result.validation_results
                         if not r.is_valid
                     ]
 
@@ -206,8 +207,10 @@ class EvaluationRunner:
                         variables=variables,
                         edges=edges,
                         extraction_time=extraction_time,
-                        validation_passed=validation_result.is_accepted if validation_result else None,
-                        validation_errors=validation_errors
+                        validation_passed=(
+                            validation_result.is_accepted if validation_result else None
+                        ),
+                        validation_errors=validation_errors,
                     )
                 except Exception as log_error:
                     logger.debug(f"Extraction logging skipped: {log_error}")
@@ -275,37 +278,45 @@ class EvaluationRunner:
             try:
                 # Get causal sentences from contract
                 contract_text = contract["context"]
-                contract_sentences = [s.strip() for s in contract_text.split('.') if len(s.strip()) > 10]
+                contract_sentences = [
+                    s.strip() for s in contract_text.split(".") if len(s.strip()) > 10
+                ]
 
-                # Generate decoys and create mixed document
+                # Generate decoys
                 decoys = self.decoy_generator.generate_decoy_set(n_decoys_per_contract)
                 decoy_texts = [d.text for d in decoys]
-                total_decoy_sentences += len(decoy_texts)
 
                 # Mix decoys into contract (as per paper's "negative control insertion")
-                mixed_doc, decoy_indices = self.decoy_generator.create_mixed_document(
-                    contract_sentences, decoy_ratio=0.3
+                # Pass decoy_texts to ensure consistency between injection and detection
+                mixed_doc, decoy_indices, actual_decoy_texts = (
+                    self.decoy_generator.create_mixed_document(
+                        contract_sentences, decoy_ratio=0.3, decoy_texts=decoy_texts
+                    )
                 )
+                total_decoy_sentences += len(actual_decoy_texts)
 
                 # Extract from mixed document
                 variables, edges = extractor.extract(mixed_doc)
 
                 # Validate with decoy spans - validator will detect decoy-only edges
                 validation_result = self.validator.validate(
-                    variables, edges, mixed_doc, decoy_spans=decoy_texts
+                    variables, edges, mixed_doc, decoy_spans=actual_decoy_texts
                 )
 
                 # Count decoy-related rejections from validation certificate
-                decoy_rejections = len([
-                    (edge, reason) for edge, reason in validation_result.rejected_edges
-                    if "decoy" in reason.lower()
-                ])
+                decoy_rejections = len(
+                    [
+                        (edge, reason)
+                        for edge, reason in validation_result.rejected_edges
+                        if "decoy" in reason.lower()
+                    ]
+                )
                 total_rejected += decoy_rejections
 
                 # Count edges that were accepted but grounded in decoys (hallucinations)
                 # These are edges the validator should have caught
                 decoy_accepted = self._count_decoy_grounded_edges(
-                    validation_result.accepted_edges, decoy_texts, mixed_doc
+                    validation_result.accepted_edges, actual_decoy_texts, mixed_doc
                 )
                 total_accepted += decoy_accepted
 
@@ -316,12 +327,12 @@ class EvaluationRunner:
                         test_type="decoy_injection",
                         contract_id=contract.get("id", f"contract_{i}"),
                         details={
-                            "n_decoys_injected": len(decoy_texts),
+                            "n_decoys_injected": len(actual_decoy_texts),
                             "n_edges_extracted": len(edges),
                             "n_decoy_rejections": decoy_rejections,
                             "n_decoy_accepted": decoy_accepted,
-                            "decoy_types": [d.decoy_type for d in decoys]
-                        }
+                            "decoy_types": [d.decoy_type for d in decoys],
+                        },
                     )
                 except Exception as log_error:
                     pass
@@ -330,7 +341,9 @@ class EvaluationRunner:
                     logger.info(f"  Processed {i+1}/{len(contracts)} contracts")
 
             except Exception as e:
-                logger.warning(f"Decoy test error for contract {contract.get('id', i)}: {e}")
+                logger.warning(
+                    f"Decoy test error for contract {contract.get('id', i)}: {e}"
+                )
 
         logger.info(
             f"  Decoy test complete: {total_rejected} rejected, {total_accepted} accepted (hallucinations)"
@@ -575,8 +588,8 @@ class EvaluationRunner:
             if self.include_adversarial and is_llm_method:
                 # Decoy test - inject decoys into contracts as per IEEE paper Section 7
                 # Uses "Negative control insertion" methodology
-                rejected_decoy_edges, accepted_decoy_edges, n_decoy_sentences = self.run_decoy_test(
-                    method_name, contracts, n_decoys_per_contract=5
+                rejected_decoy_edges, accepted_decoy_edges, n_decoy_sentences = (
+                    self.run_decoy_test(method_name, contracts, n_decoys_per_contract=5)
                 )
 
                 # Paraphrase test - run on all contracts, reuse extraction results
@@ -600,6 +613,7 @@ class EvaluationRunner:
                 extraction_results=extraction_results,
                 rejected_decoy_edges=rejected_decoy_edges,
                 accepted_decoy_edges=accepted_decoy_edges,
+                n_decoys_tested=n_decoy_sentences,
                 ground_truth_edges=ground_truth,
                 paraphrase_original=paraphrase_original,
                 paraphrase_results=paraphrase_results,

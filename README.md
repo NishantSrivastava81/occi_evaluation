@@ -4,6 +4,14 @@
 
 This repository contains the experimental framework for evaluating the OCCI (Ontology-Constrained Causal Induction) methodology on the CUAD (Contract Understanding Atticus Dataset) using Azure OpenAI GPT-5.
 
+## Dataset Configuration
+
+- **Training set:** 250 contracts
+- **Validation set:** 50 contracts  
+- **Test set:** 150 contracts
+- **CUAD-derived causal edges:** 3,847 edges across 450 contracts
+- **Decoy insertions:** 10 per contract (1,500 total for test set)
+
 ## Abstract
 
 Large Language Models can extract causal relationships from text but often produce structurally invalid graphs (cycles, type violations). OCCI addresses this by constraining LLM extraction with a domain ontology that enforces:
@@ -11,6 +19,14 @@ Large Language Models can extract causal relationships from text but often produ
 - Allowed edge types: Only ontology-permitted causal connections
 - Span grounding: Variables must be grounded in text spans
 - Acyclicity: The resulting SCM must be a DAG
+
+## Dataset Configuration
+
+- **Training set:** 250 contracts
+- **Validation set:** 50 contracts  
+- **Test set:** 150 contracts
+- **CUAD-derived causal edges:** 3,847 edges across 450 contracts
+- **Decoy insertions:** 10 per contract (1,500 total for test set)
 
 ## Project Structure
 

@@ -230,23 +230,32 @@ class DecoyGenerator:
         ]
 
     def create_mixed_document(
-        self, causal_sentences: List[str], decoy_ratio: float = 0.3
-    ) -> Tuple[str, List[int]]:
+        self,
+        causal_sentences: List[str],
+        decoy_ratio: float = 0.3,
+        decoy_texts: List[str] = None,
+    ) -> Tuple[str, List[int], List[str]]:
         """
         Create a document mixing causal and decoy sentences.
 
         Args:
             causal_sentences: List of sentences with actual causal content
             decoy_ratio: Ratio of decoys to total sentences
+            decoy_texts: Optional pre-generated decoy texts to use
 
         Returns:
-            (mixed_document, decoy_indices) tuple
+            (mixed_document, decoy_indices, decoy_texts) tuple
         """
         n_causal = len(causal_sentences)
         n_decoys = int(n_causal * decoy_ratio / (1 - decoy_ratio))
 
-        decoys = self.generate_decoy_set(n_decoys)
-        decoy_texts = [d.text for d in decoys]
+        # Use provided decoys or generate new ones
+        if decoy_texts is None:
+            decoys = self.generate_decoy_set(n_decoys)
+            decoy_texts = [d.text for d in decoys]
+        else:
+            # Adjust n_decoys to match provided decoys
+            n_decoys = len(decoy_texts)
 
         # Interleave causal and decoy sentences
         all_sentences = []
@@ -267,7 +276,7 @@ class DecoyGenerator:
                 causal_idx += 1
 
         mixed_doc = " ".join(all_sentences)
-        return mixed_doc, decoy_indices
+        return mixed_doc, decoy_indices, decoy_texts
 
     def get_all_decoys(self) -> List[DecoySentence]:
         """Get all predefined decoy sentences."""

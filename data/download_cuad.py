@@ -248,10 +248,12 @@ def get_dataset_stats() -> Dict:
 
 def create_ground_truth_edges(contract: Dict) -> List[Dict]:
     """
-    Create ground truth causal edges from contract clause annotations.
+    Create CUAD-derived ground truth causal edges from contract clause annotations.
 
-    This maps CUAD clause types to our ontology and creates expected
-    causal relationships based on legal domain knowledge.
+    This implements the CUAD-Derived Annotation Methodology from Section 7.1:
+    1. Clause-to-Variable Mapping: Map CUAD's 41 clause types to ontology types
+    2. Edge Derivation Rules: Create edges using ontology partial order constraints
+    3. Automated Extraction: Pattern matching on CUAD annotations
 
     Args:
         contract: Contract dictionary with clauses

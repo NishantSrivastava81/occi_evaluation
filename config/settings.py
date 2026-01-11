@@ -58,7 +58,7 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 DEFAULT_MODEL = "gpt-5-mini"  # Azure OpenAI GPT-5-mini (faster)
 FALLBACK_MODEL = "gpt-4o"  # Azure OpenAI GPT-4o for comparison
-TEMPERATURE = 1.0  # GPT-5-mini only supports temperature=1.0
+TEMPERATURE = 1.0  # GPT-5-mini only supports temperature=1.0 (model default)
 MAX_TOKENS = 16384  # Reduced for gpt-5-mini (faster processing)
 TOP_P = 1.0  # Nucleus sampling disabled for determinism
 FREQUENCY_PENALTY = 0.0
@@ -68,16 +68,18 @@ PRESENCE_PENALTY = 0.0
 # EXPERIMENTAL PARAMETERS
 # ============================================================================
 # Parameters for empirical evaluation on CUAD dataset.
-# Values determined through preliminary experiments (Section 5.1).
+# Values determined through preliminary experiments (Section 7.1).
 
 # Dataset sampling
-DEFAULT_NUM_CONTRACTS = 100  # Primary evaluation set size
-VALIDATION_SET_SIZE = 20  # Held-out validation set
-TEST_SET_SIZE = 50  # Final test set
+DEFAULT_NUM_CONTRACTS = 150  # Primary evaluation set size (test set)
+VALIDATION_SET_SIZE = 50  # Held-out validation set
+TRAINING_SET_SIZE = 250  # Training set size
 RANDOM_SEED = 42  # For reproducibility
 
 # Adversarial challenge parameters
-NUM_DECOYS_PER_CONTRACT = 15  # Decoy sentences per contract
+NUM_DECOYS_PER_CONTRACT = (
+    10  # Decoy sentences per contract (paper: 1,500 total for test set)
+)
 NUM_PARAPHRASES = 5  # Paraphrase variations per sample
 NUM_CONTRADICTION_SAMPLES = 30  # Contradiction challenge samples
 
@@ -91,8 +93,8 @@ SPAN_GROUNDING_THRESHOLD = 0.85  # Required text span overlap
 # VALIDATOR HYPERPARAMETERS (Algorithm 1)
 # ============================================================================
 VALIDATOR_CONFIG = {
-    "k_decoys": 15,  # Number of decoy sentences injected
-    "similarity_threshold": 0.75,  # τ_sim: semantic similarity threshold
+    "k_decoys": 10,  # Number of decoy sentences injected (paper Section 7.1)
+    "similarity_threshold": 0.85,  # τ_sim: semantic similarity threshold (paper: cosine ≥0.85)
     "tau_conf": 0.65,  # τ_conf: confidence threshold for edge acceptance
     "tau_agree": 0.80,  # τ_agree: multi-prompt agreement threshold
     "multi_prompt_threshold": 3,  # Accept if ≥3/5 prompts agree

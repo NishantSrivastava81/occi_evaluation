@@ -1,0 +1,161 @@
+{
+  "run_id": "20260111_100108",
+  "timestamp": "2026-01-11T11:19:12.055412",
+  "n_contracts": 10,
+  "methods_evaluated": [
+    "occi",
+    "llm_unconstrained",
+    "pattern",
+    "rule"
+  ],
+  "summaries": {
+    "occi": {
+      "method_name": "occi",
+      "n_contracts": 10,
+      "metrics": {
+        "structural_correctness": {
+          "value": 0.9027777777777778,
+          "numerator": 65,
+          "denominator": 72
+        },
+        "cycle_score": {
+          "value": 1.0,
+          "numerator": 10,
+          "denominator": 10
+        },
+        "false_positive_rate": {
+          "value": 0.68,
+          "numerator": 34,
+          "denominator": 50
+        },
+        "decoy_rejection_rate": {
+          "value": 0.31999999999999995,
+          "numerator": 16,
+          "denominator": 50
+        },
+        "true_positive_rate": {
+          "value": 1.0,
+          "numerator": 1,
+          "denominator": 1
+        },
+        "false_positive_causal_rate": {
+          "value": 0.6805555555555556,
+          "numerator": 49,
+          "denominator": 72
+        },
+        "invariance_accuracy": {
+          "value": 0.6,
+          "numerator": 6,
+          "denominator": 10
+        },
+        "inversion_rate": {
+          "value": 0.8,
+          "numerator": 8,
+          "denominator": 10
+        }
+      }
+    },
+    "llm_unconstrained": {
+      "method_name": "llm_unconstrained",
+      "n_contracts": 10,
+      "metrics": {
+        "structural_correctness": {
+          "value": 0.0,
+          "numerator": 0,
+          "denominator": 213
+        },
+        "cycle_score": {
+          "value": 1.0,
+          "numerator": 10,
+          "denominator": 10
+        },
+        "false_positive_rate": {
+          "value": 0.98,
+          "numerator": 49,
+          "denominator": 50
+        },
+        "decoy_rejection_rate": {
+          "value": 0.020000000000000018,
+          "numerator": 1,
+          "denominator": 50
+        },
+        "true_positive_rate": {
+          "value": 0.0,
+          "numerator": 0,
+          "denominator": 1
+        },
+        "false_positive_causal_rate": {
+          "value": 0.7887323943661971,
+          "numerator": 168,
+          "denominator": 213
+        },
+        "invariance_accuracy": {
+          "value": 1.0,
+          "numerator": 10,
+          "denominator": 10
+        },
+        "inversion_rate": {
+          "value": 0.0,
+          "numerator": 0,
+          "denominator": 10
+        }
+      }
+    },
+    "pattern": {
+      "method_name": "pattern",
+      "n_contracts": 10,
+      "metrics": {
+        "structural_correctness": {
+          "value": 1.0,
+          "numerator": 819,
+          "denominator": 819
+        },
+        "cycle_score": {
+          "value": 1.0,
+          "numerator": 10,
+          "denominator": 10
+        },
+        "true_positive_rate": {
+          "value": 1.0,
+          "numerator": 1,
+          "denominator": 1
+        },
+        "false_positive_causal_rate": {
+          "value": 0.003663003663003663,
+          "numerator": 3,
+          "denominator": 819
+        }
+      }
+    },
+    "rule": {
+      "method_name": "rule",
+      "n_contracts": 10,
+      "metrics": {
+        "structural_correctness": {
+          "value": 1.0,
+          "numerator": 6,
+          "denominator": 6
+        },
+        "cycle_score": {
+          "value": 1.0,
+          "numerator": 10,
+          "denominator": 10
+        },
+        "true_positive_rate": {
+          "value": 1.0,
+          "numerator": 1,
+          "denominator": 1
+        },
+        "false_positive_causal_rate": {
+          "value": 0.16666666666666666,
+          "numerator": 1,
+          "denominator": 6
+        }
+      }
+    }
+  },
+  "config": {
+    "llm_provider": "azure",
+    "include_adversarial": true
+  }
+}

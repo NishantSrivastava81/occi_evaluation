@@ -10,9 +10,9 @@ paper, testing causal structure extraction on the CUAD (Contract Understanding
 Atticus Dataset) using Azure OpenAI GPT-5.
 
 Research Methodology:
-    1. Dataset: CUAD legal contracts (n=100 stratified sample)
+    1. Dataset: CUAD legal contracts (n=150 test, 50 validation, 250 training)
     2. Methods: OCCI (proposed), LLM-only baseline, pattern baseline, rule baseline
-    3. Metrics: SC, CS, FPR, TPR, DRR, IA, IR (see Section 5 of paper)
+    3. Metrics: SC, CS, FPR, TPR, DRR, IA, IR (see Section 7 of paper)
     4. Adversarial: Decoy injection, paraphrase invariance, contradiction detection
 
 Usage:
@@ -22,7 +22,7 @@ Usage:
     python main.py --figures            Generate publication figures from results
 
 Examples:
-    python main.py --run --contracts 100 --provider azure
+    python main.py --run --contracts 150 --provider azure
     python main.py --ablation --model gpt-4o
     python main.py --figures --format pdf
 """
@@ -662,7 +662,7 @@ Environment Variables:
   AZURE_OPENAI_API_KEY       Azure OpenAI API key
   AZURE_OPENAI_GPT5_DEPLOYMENT  GPT-5 deployment name (default: gpt-5)
 
-For more information, see the README.md or paper Section 5.
+For more information, see the README.md or paper Section 7.
 ═══════════════════════════════════════════════════════════════════════════════
         """,
     )

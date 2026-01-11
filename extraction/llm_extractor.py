@@ -296,6 +296,7 @@ class LLMExtractor:
 
         # Call LLM with retry logic and logging
         import time as time_module
+
         start_time = time_module.time()
         response_text = self._call_llm(prompt)
         latency = time_module.time() - start_time
@@ -309,13 +310,13 @@ class LLMExtractor:
             extraction_logger.log_llm_call(
                 provider=self.provider,
                 model=self.model,
-                contract_id=getattr(self, '_current_contract_id', 'unknown'),
+                contract_id=getattr(self, "_current_contract_id", "unknown"),
                 prompt=prompt,
                 response=response_text,
                 parsed_variables=len(variables),
                 parsed_edges=len(edges),
                 latency=latency,
-                success=True
+                success=True,
             )
         except Exception as log_error:
             logger.debug(f"Logging skipped: {log_error}")
@@ -402,13 +403,16 @@ class LLMExtractor:
 
         return consensus_vars, consensus_edges
 
-    def _call_llm(self, prompt: str, max_retries: int = 3) -> str:
+    def _call_llm(self, prompt: str, max_retries: int = 5) -> str:
         """
-        Call the LLM API with retry logic.
+        Call the LLM API with robust retry logic for rate limiting.
+
+        Implements exponential backoff with jitter for 429 (rate limit) errors.
+        Also handles transient errors (500, 502, 503, 504) with retries.
 
         Args:
             prompt: The prompt to send
-            max_retries: Maximum number of retry attempts
+            max_retries: Maximum number of retry attempts (default 5 for rate limits)
 
         Returns:
             Response text from the model
@@ -417,8 +421,10 @@ class LLMExtractor:
             Exception: If all retries fail
         """
         import time
+        import random
 
         last_error = None
+        base_wait = 1  # Base wait time in seconds
 
         for attempt in range(max_retries):
             try:
@@ -476,10 +482,53 @@ class LLMExtractor:
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"LLM call attempt {attempt + 1} failed: {e}")
+                error_str = str(e).lower()
+
+                # Check for rate limit errors (429)
+                is_rate_limit = (
+                    "429" in str(e)
+                    or "rate" in error_str
+                    or "too many requests" in error_str
+                    or "ratelimit" in error_str
+                    or "quota" in error_str
+                )
+
+                # Check for transient server errors (5xx)
+                is_transient = (
+                    "500" in str(e)
+                    or "502" in str(e)
+                    or "503" in str(e)
+                    or "504" in str(e)
+                    or "timeout" in error_str
+                    or "connection" in error_str
+                )
+
+                if is_rate_limit:
+                    # Use longer backoff for rate limits with jitter
+                    wait_time = (2**attempt) * 10 + random.uniform(1, 5)
+                    logger.warning(
+                        f"Rate limit hit (429). Attempt {attempt + 1}/{max_retries}. "
+                        f"Waiting {wait_time:.1f}s before retry..."
+                    )
+                elif is_transient:
+                    # Standard exponential backoff for transient errors
+                    wait_time = (2**attempt) * 2 + random.uniform(0, 1)
+                    logger.warning(
+                        f"Transient error. Attempt {attempt + 1}/{max_retries}. "
+                        f"Waiting {wait_time:.1f}s before retry..."
+                    )
+                else:
+                    # Unknown error - shorter backoff
+                    wait_time = 2**attempt
+                    logger.warning(
+                        f"LLM call attempt {attempt + 1}/{max_retries} failed: {e}. "
+                        f"Waiting {wait_time}s..."
+                    )
+
                 if attempt < max_retries - 1:
-                    wait_time = 2**attempt  # Exponential backoff
                     time.sleep(wait_time)
+                else:
+                    logger.error(f"All {max_retries} retry attempts exhausted.")
 
         raise Exception(f"LLM call failed after {max_retries} attempts: {last_error}")
 
@@ -698,16 +747,56 @@ Extract ALL causal relationships. Return valid JSON only."""
                 effect_name = f"unconstrained_effect_{var_id}"
                 var_id += 1
 
-                # Assign default types (no ontology guidance)
-                # This represents what an LLM produces without type constraints
+                # Infer types heuristically from text (no ontology guidance)
+                # This represents what an LLM might produce without explicit type constraints
+                cause_text = rel.get("cause", "").lower()
+                effect_text = rel.get("effect", "").lower()
+
+                # Heuristic type inference for cause
+                if any(
+                    w in cause_text
+                    for w in ["shall", "must", "obligation", "duty", "require"]
+                ):
+                    cause_type = OntologyType.OBLIGATION
+                elif any(
+                    w in cause_text for w in ["failure", "breach", "default", "violat"]
+                ):
+                    cause_type = OntologyType.COMPLIANCE_EVENT
+                elif any(
+                    w in cause_text
+                    for w in ["section", "clause", "article", "provision"]
+                ):
+                    cause_type = OntologyType.CLAUSE
+                else:
+                    cause_type = OntologyType.COMPLIANCE_EVENT  # Default to event
+
+                # Heuristic type inference for effect
+                if any(
+                    w in effect_text
+                    for w in ["breach", "default", "terminat", "material"]
+                ):
+                    effect_type = OntologyType.OUTCOME
+                elif any(
+                    w in effect_text
+                    for w in ["damage", "cost", "penalt", "liable", "indemn"]
+                ):
+                    effect_type = OntologyType.COST
+                elif any(
+                    w in effect_text
+                    for w in ["cure", "remedy", "right", "may terminate"]
+                ):
+                    effect_type = OntologyType.REMEDY
+                else:
+                    effect_type = OntologyType.OUTCOME  # Default to outcome
+
                 cause_var = Variable(
                     name=cause_name,
-                    var_type=OntologyType.CLAUSE,  # Default type
+                    var_type=cause_type,
                     span_text=rel.get("cause", ""),
                 )
                 effect_var = Variable(
                     name=effect_name,
-                    var_type=OntologyType.OUTCOME,  # Default type
+                    var_type=effect_type,
                     span_text=rel.get("effect", ""),
                 )
 

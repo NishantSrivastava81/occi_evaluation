@@ -169,11 +169,11 @@ class PatternExtractor:
             extraction_logger = get_extraction_logger()
             extraction_logger.log_extraction(
                 method="pattern",
-                contract_id=getattr(self, '_current_contract_id', 'unknown'),
+                contract_id=getattr(self, "_current_contract_id", "unknown"),
                 input_text=contract_text[:1000],  # First 1000 chars
                 variables=variables,
                 edges=edges,
-                extraction_time=0.0  # Pattern extraction is fast
+                extraction_time=0.0,  # Pattern extraction is fast
             )
         except Exception as log_error:
             pass  # Logging should not break extraction
