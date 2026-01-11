@@ -247,19 +247,4 @@ logger = get_extraction_logger(run_id="20260111_143000")
 print(f"Log directory: {logger.log_dir}")
 ```
 
-## Citation
 
-If you use this framework, please cite:
-
-```bibtex
-@article{occi2026,
-  title={Ontology-Constrained Induction of Structural Causal Models from Text Using Large Language Models},
-  author={[Authors]},
-  journal={IEEE Transactions on [Journal]},
-  year={2026}
-}
-```
-
-## License
-
-[License information]
